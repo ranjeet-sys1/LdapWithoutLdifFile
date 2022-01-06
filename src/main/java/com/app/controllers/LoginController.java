@@ -1,23 +1,49 @@
 /**
- * 
+ *
  */
 package com.app.controllers;
 
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.ModelAndView;
+import com.app.Model.LoginRequest;
+import com.app.util.JwtUtils;
+import com.app.utility.ResponseConstantIntegerValue;
+import com.app.utility.ResponseConstantValue;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * @author pavan.solapure
- *
- */
-@Controller
-@RequestMapping("/")
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+
+@RestController
 public class LoginController {
 
-	@RequestMapping(value = "login", method = RequestMethod.GET)
-	public ModelAndView Login() {
-		return new ModelAndView("login");
-	}
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtils jwtUtils;
+
+
+	@PostMapping("/login")
+    public ResponseEntity authenticateUser(@RequestBody LoginRequest loginRequest) {
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String token = jwtUtils.generateToken(authentication);
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList());
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        response.put("roles", String.valueOf(roles));
+        response.put("response value", ResponseConstantValue.SUCCESS_MESSAGE);
+        response.put("response code", String.valueOf(ResponseConstantIntegerValue.SUCCESS_RESPONSE));
+        return new ResponseEntity(response, HttpStatus.OK);
+    }
 }
