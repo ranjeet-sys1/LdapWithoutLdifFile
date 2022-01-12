@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -40,6 +41,8 @@ public class LoginController {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream().map(item -> item.getAuthority()).collect(Collectors.toList());
         Map<String, String> response = new HashMap<>();
+        response.put("username", userDetails.getUsername());
+        response.put("name",authentication.getName());
         response.put("token", token);
         response.put("roles", String.valueOf(roles));
         response.put("response value", ResponseConstantValue.SUCCESS_MESSAGE);
